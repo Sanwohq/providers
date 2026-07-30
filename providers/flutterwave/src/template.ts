@@ -1,0 +1,76 @@
+export const template = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sanwo Checkout</title>
+</head>
+<body style="background-color:#fff;height:100vh">
+  <script>
+    {{sanwoBridge}}
+
+    var params = {{params}};
+
+    function initPayment() {
+      try {
+        var config = {
+          public_key: params.publicKey,
+          tx_ref: params.reference,
+          amount: params.amount,
+          currency: params.currency,
+          customer: {
+            email: params.email
+          },
+          callback: function(response) {
+            var isSuccess = response.status === 'successful' || response.status === 'completed';
+            if (isSuccess) {
+              sanwoCallback('success', {
+                reference: response.tx_ref,
+                transaction_id: response.transaction_id,
+                flw_ref: response.flw_ref,
+                raw: response
+              });
+            } else {
+              sanwoCallback('error', {
+                message: 'Flutterwave checkout returned status: ' + response.status,
+                raw: response
+              });
+            }
+            if (typeof FlutterwaveCheckout !== 'undefined') {
+              try { FlutterwaveCheckout.close(); } catch(e) {}
+            }
+          },
+          onclose: function() {
+            sanwoCallback('cancelled', {});
+          }
+        };
+
+        if (params.name || params.firstName) {
+          config.customer.name = params.name || [params.firstName, params.lastName].filter(Boolean).join(' ');
+        }
+        if (params.phone) config.customer.phonenumber = params.phone;
+        if (params.metadata) config.meta = params.metadata;
+        if (params.description) config.title = params.description;
+        if (params.paymentOptions) config.payment_options = params.paymentOptions;
+        if (params.redirectUrl) config.redirect_url = params.redirectUrl;
+        if (params.paymentPlan) config.payment_plan = params.paymentPlan;
+        if (params.subaccounts) config.subaccounts = params.subaccounts;
+        if (params.customizations) config.customizations = params.customizations;
+
+        sanwoCallback('loaded', {});
+        FlutterwaveCheckout(config);
+      } catch(e) {
+        sanwoCallback('error', { message: e.message });
+      }
+    }
+
+    var flwScript = document.createElement('script');
+    flwScript.src = 'https://checkout.flutterwave.com/v3.js';
+    flwScript.onload = initPayment;
+    flwScript.onerror = function() {
+      sanwoCallback('error', { message: 'Failed to load Flutterwave SDK' });
+    };
+    document.body.appendChild(flwScript);
+  <\/script>
+</body>
+</html>`;

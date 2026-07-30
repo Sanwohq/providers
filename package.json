@@ -1,0 +1,23 @@
+{
+  "name": "@sanwohq/providers",
+  "private": true,
+  "description": "Community-maintained payment provider templates for Sanwo",
+  "license": "Apache-2.0",
+  "scripts": {
+    "build": "turbo run build",
+    "test": "turbo run test",
+    "typecheck": "turbo run typecheck",
+    "lint": "turbo run lint",
+    "format:check": "prettier --check 'providers/*/src/**/*.ts'",
+    "format": "prettier --write 'providers/*/src/**/*.ts'"
+  },
+  "devDependencies": {
+    "@sanwohq/testing": "latest",
+    "@sanwohq/types": "latest",
+    "prettier": "^3.0.0",
+    "tsup": "^8.0.0",
+    "turbo": "^2.0.0",
+    "typescript": "^5.0.0",
+    "vitest": "^4.0.0"
+  }
+}

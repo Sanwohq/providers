@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  test:
+    name: Build & Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - run: pnpm test
+      - run: pnpm typecheck
+
+  detect-changes:
+    name: Detect changed providers
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: List changed providers
+        run: |
+          echo "## Changed providers" >> $GITHUB_STEP_SUMMARY
+          git diff --name-only origin/main...HEAD -- providers/ \
+            | grep -oP 'providers/\K[^/]+' \
+            | grep -v '^_template$' \
+            | sort -u \
+            | while read provider; do
+                echo "- \`@sanwohq/$provider\`" >> $GITHUB_STEP_SUMMARY
+              done

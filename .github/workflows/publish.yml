@@ -1,0 +1,68 @@
+name: Publish
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  publish:
+    name: Publish changed providers
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          registry-url: https://registry.npmjs.org
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - run: pnpm test
+
+      - name: Publish changed providers
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          changed=$(git diff --name-only HEAD~1 -- providers/ \
+            | grep -oP 'providers/\K[^/]+' \
+            | grep -v '^_template$' \
+            | sort -u)
+
+          if [ -z "$changed" ]; then
+            echo "No provider changes detected, skipping publish."
+            exit 0
+          fi
+
+          for provider in $changed; do
+            dir="providers/$provider"
+            if [ ! -f "$dir/package.json" ]; then
+              echo "Skipping $provider — no package.json"
+              continue
+            fi
+
+            name=$(node -e "console.log(require('./$dir/package.json').name)")
+            version=$(node -e "console.log(require('./$dir/package.json').version)")
+
+            published=$(npm view "$name@$version" version 2>/dev/null || echo "")
+            if [ "$published" = "$version" ]; then
+              echo "$name@$version already published, skipping."
+              continue
+            fi
+
+            echo "Publishing $name@$version..."
+            cd "$dir"
+            pnpm publish --no-git-checks --access public
+            cd -
+            echo "Published $name@$version"
+          done

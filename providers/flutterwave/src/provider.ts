@@ -1,0 +1,47 @@
+import type { SanwoProviderDefinition } from "@sanwohq/types";
+import { template } from "./template.js";
+
+export const flutterwaveProvider: SanwoProviderDefinition = {
+  id: "flutterwave",
+  name: "flutterwave",
+  displayName: "Flutterwave",
+  template,
+  website: "https://flutterwave.com",
+  documentation: "https://developer.flutterwave.com",
+  amountInMinorUnit: false,
+  supportedCurrencies: [
+    "NGN",
+    "GHS",
+    "KES",
+    "ZAR",
+    "USD",
+    "EUR",
+    "GBP",
+    "TZS",
+    "UGX",
+    "RWF",
+    "XAF",
+    "XOF",
+  ],
+  supportedCountries: [
+    "NG",
+    "GH",
+    "KE",
+    "ZA",
+    "US",
+    "GB",
+    "TZ",
+    "UG",
+    "RW",
+    "CM",
+    "CI",
+  ],
+  paymentMethods: [
+    "card",
+    "bank_transfer",
+    "ussd",
+    "mobile_money",
+    "apple_pay",
+    "qr",
+  ],
+};
